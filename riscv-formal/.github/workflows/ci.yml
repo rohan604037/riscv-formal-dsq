@@ -1,0 +1,80 @@
+name: ci
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+  test_oss:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout RiscV-Formal
+        uses: actions/checkout@v7
+
+      - name: Install oss-cad-suite
+        uses: YosysHQ/setup-oss-cad-suite@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run checks
+        run: |
+          cd cores/nerv
+          make check -j$(nproc)
+          cd ../picorv32
+          wget -O picorv32.v https://raw.githubusercontent.com/YosysHQ/picorv32/master/picorv32.v
+          python3 ../../checks/genchecks.py
+          make -C checks -j$(nproc)
+
+  test_verific:
+    runs-on: [self-hosted, linux, x64]
+
+    steps:
+      - name: Checkout RiscV-Formal
+        uses: actions/checkout@v7
+
+      - name: Checkout Yosys
+        uses: actions/checkout@v7
+        with:
+          repository: 'YosysHQ/yosys'
+          path: 'yosys'
+          submodules: true
+
+      - name: Runtime environment
+        run: |
+          echo "procs=$(nproc)" >> $GITHUB_ENV
+
+      - name: Build Yosys
+        run: |
+          cd yosys
+          rm -rf build Configuration.cmake
+          echo 'set(CMAKE_C_COMPILER clang CACHE STRING "")' >> Configuration.cmake
+          echo 'set(CMAKE_CXX_COMPILER clang++ CACHE STRING "")' >> Configuration.cmake
+          echo 'set(YOSYS_COMPILER_LAUNCHER ccache CACHE STRING "")' >> Configuration.cmake
+          echo 'set(YOSYS_VERIFIC_DIR "/usr/local/src/verific_lib" CACHE STRING "")' >> Configuration.cmake
+
+          cmake -C Configuration.cmake -B build . -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/.local -DCMAKE_BUILD_TYPE=Debug
+
+          cmake --build build -j${{ env.procs }}
+          cmake --build build --target install
+
+      - name: Checkout SBY
+        uses: actions/checkout@v7
+        with:
+          repository: 'YosysHQ/sby'
+          path: 'sby'
+
+      - name: Build SBY
+        run: |
+          make -C sby install DESTDIR=${GITHUB_WORKSPACE}/.local PREFIX=
+
+      - name: Run checks
+        run: |
+          cd cores/nerv
+          make check -j$(nproc)
+          cd ../picorv32
+          wget -O picorv32.v https://raw.githubusercontent.com/YosysHQ/picorv32/master/picorv32.v
+          python3 ../../checks/genchecks.py
+          make -C checks -j$(nproc)

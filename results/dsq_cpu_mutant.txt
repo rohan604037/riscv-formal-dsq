@@ -1,0 +1,13 @@
+CPU-level (riscv-formal insn_dsq_ch0) bug injection on the tapeout core
+
+Mutant: picorv32_pcpi_dsq decode funct3 changed 3'b111 -> 3'b110
+Effect: DSQ never gets pcpi_ready; PicoRV32 waits out its PCPI timeout and raises an
+        illegal-instruction trap.
+
+Run at the default 20-cycle window: ERROR (PREUNSAT) - the trap cannot retire inside the
+window, so the check is unsatisfiable rather than passing (visible, not silent).
+Run at a 40-cycle window: FAIL, solver time 35 s. Failed assertions (rvfi_insn_check.sv):
+  176  spec_rd_addr  == rd_addr
+  177  spec_rd_wdata == rd_wdata
+  178  spec_pc_wdata == pc_wdata
+  198  spec_trap     == trap

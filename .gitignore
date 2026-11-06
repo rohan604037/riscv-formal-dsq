@@ -1,0 +1,26 @@
+# Personal notes (not published)
+/RESUME_BULLETS.md
+
+# Upstream PicoRV32 clone (only used to seed riscv-formal/cores/picorv32)
+/picorv32/
+
+# riscv-formal's own git metadata (vendored here as plain source)
+/riscv-formal/.git/
+
+# Generated check directories and solver output (large, regenerable)
+/riscv-formal/cores/*/checks/
+/riscv-formal/cores/picorv32/picorv32.v
+
+# Standalone DSQ proof work directories (keep only summaries)
+/formal/dsq_unit/dsq_unit_prove/
+/formal/dsq_unit/dsq_unit_cover/
+/formal/dsq_unit/run.log
+/formal/dsq_unit/dsq_unit/
+/formal/dsq_unit/mutants/*/
+!/formal/dsq_unit/mutants/summary.txt
+
+# Waveforms / misc
+*.vcd
+*.fst
+*.yw
+__pycache__/

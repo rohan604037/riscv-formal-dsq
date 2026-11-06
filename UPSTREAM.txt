@@ -1,0 +1,2 @@
+riscv-formal: https://github.com/YosysHQ/riscv-formal @ c992aa61fdfe0846c5ed90324c596202a1c69b76
+picorv32:     https://github.com/YosysHQ/picorv32 @ ef203c2b0a3fb793280f5114941416c425c5b461
